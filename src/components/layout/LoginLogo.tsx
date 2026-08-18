@@ -3,7 +3,7 @@ import { resolveTheme, useThemeStore } from '@/store/themeStore';
 import { APP_CONFIG } from '@/config/app';
 import { cn } from '@/lib/utils';
 
-const LOGO_SRC = '/logo.svg';
+const LOGO_SRC = '/logo.png';
 
 // Puntitos de color flotando alrededor del logo — mismo elemento en ambos temas, pero es lo
 // que le da a "claro" su propio momento en vez de sentirse como un oscuro apagado: colores

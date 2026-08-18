@@ -27,7 +27,7 @@ export function CashierShell({ children }: { children: ReactNode }) {
       <header className="flex items-center justify-between gap-1.5 border-b border-border bg-surface px-3 py-2.5 shadow-soft sm:gap-3 sm:px-5 sm:py-3">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <img
-            src="/logo.svg"
+            src="/logo.png"
             alt={APP_CONFIG.storeName}
             className={cn('h-8 w-auto flex-shrink-0 object-contain sm:h-9', logoGlowClasses)}
           />

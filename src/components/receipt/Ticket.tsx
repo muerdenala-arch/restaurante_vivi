@@ -47,7 +47,7 @@ export function Ticket({ sale, onClose }: TicketProps) {
         <div id="ticket-print" className="rounded-xl2 border-2 border-dashed border-border bg-cream-100 p-4 font-mono text-xs text-ink">
           <div className="mb-2 text-center">
             <img
-              src="/logo.svg"
+              src="/logo.png"
               alt={APP_CONFIG.storeName}
               className={cn('mx-auto mb-1.5 h-8 w-auto object-contain', logoGlowClasses)}
             />

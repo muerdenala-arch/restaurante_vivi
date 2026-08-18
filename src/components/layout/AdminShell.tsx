@@ -34,7 +34,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         >
           <Menu size={22} />
         </button>
-        <img src="/logo.svg" alt={APP_CONFIG.storeName} className={cn('h-8 w-auto object-contain', logoGlowClasses)} />
+        <img src="/logo.png" alt={APP_CONFIG.storeName} className={cn('h-8 w-auto object-contain', logoGlowClasses)} />
         <ThemeToggle />
       </header>
 
@@ -93,7 +93,7 @@ function AdminSidebarContent({
   return (
     <>
       <div className="flex items-center gap-3 px-5 py-5">
-        <img src="/logo.svg" alt={APP_CONFIG.storeName} className={cn('h-9 w-auto flex-shrink-0 object-contain', logoGlowClasses)} />
+        <img src="/logo.png" alt={APP_CONFIG.storeName} className={cn('h-9 w-auto flex-shrink-0 object-contain', logoGlowClasses)} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-display text-base font-bold leading-tight text-ink">
             {APP_CONFIG.storeName}
