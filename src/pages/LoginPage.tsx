@@ -96,8 +96,12 @@ export default function LoginPage() {
       >
         <div className="mb-6 flex flex-col items-center text-center">
           <LoginLogo />
-          <h1 className="sr-only">{APP_CONFIG.storeName}</h1>
-          {!needsBranchPick && <p className="text-sm text-ink-muted">Selecciona tu usuario e ingresa tu PIN</p>}
+          <h1 className="mt-3 font-display text-xl font-extrabold uppercase tracking-wide text-ink sm:text-2xl">
+            {APP_CONFIG.storeName}
+          </h1>
+          {!needsBranchPick && (
+            <p className="mt-2 text-sm text-ink-muted">Selecciona tu usuario e ingresa tu PIN</p>
+          )}
         </div>
 
         {needsBranchPick && currentUser ? (
