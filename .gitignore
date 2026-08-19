@@ -23,6 +23,9 @@ yarn-error.log*
 
 # Assets fuente sin procesar que no debe subir el repo (ej. capturas de referencia,
 # logos en alta resolución antes de optimizar) — la versión que realmente usa la app
-# vive en public/logo.svg.
+# vive en public/logo.png.
 /codigo qr de pago.jpg
 .claude/
+
+.vercel
+.env*
