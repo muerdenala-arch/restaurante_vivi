@@ -22,11 +22,25 @@ export function Ticket({ sale, onClose }: TicketProps) {
   // de tocarlo la primera vez. El ref evita reabrir el diálogo de impresión en cada
   // re-render mientras el mismo ticket sigue en pantalla.
   const printedSaleId = useRef<string | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (sale && printedSaleId.current !== sale.id) {
-      printedSaleId.current = sale.id;
-      window.print();
-    }
+    if (!sale || printedSaleId.current === sale.id) return;
+    printedSaleId.current = sale.id;
+    // El efecto ya corre después de que React montó el DOM (`#thermal-receipt` existe acá),
+    // pero se espera un doble rAF para garantizar que el navegador ya pintó ese frame antes
+    // de abrir el diálogo de impresión — evita el "ticket en blanco" ocasional cuando
+    // window.print() se dispara en el mismo tick que el commit.
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        if (receiptRef.current) window.print();
+      });
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
   }, [sale]);
 
   if (!sale) return null;
@@ -44,7 +58,11 @@ export function Ticket({ sale, onClose }: TicketProps) {
         </motion.div>
         <p className="mb-5 text-center font-display text-lg font-bold text-ink">Venta completada</p>
 
-        <div id="ticket-print" className="rounded-xl2 border-2 border-dashed border-border bg-cream-100 p-4 font-mono text-xs text-ink">
+        <div
+          id="thermal-receipt"
+          ref={receiptRef}
+          className="rounded-xl2 border-2 border-dashed border-border bg-cream-100 p-4 font-mono text-xs text-ink"
+        >
           <div className="mb-2 text-center">
             <img
               src="/logo.png"

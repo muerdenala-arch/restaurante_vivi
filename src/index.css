@@ -120,3 +120,29 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Impresión del ticket térmico: al imprimir, TODA la interfaz (fondo, modal, ícono de
+   check, botones "Imprimir"/"Nueva venta", etc.) se oculta — solo se envía a la impresora
+   el contenedor #thermal-receipt (58mm/80mm), sin importar dónde esté anidado en el DOM. */
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  #thermal-receipt,
+  #thermal-receipt * {
+    visibility: visible !important;
+  }
+  #thermal-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 80mm;
+    margin: 0;
+    padding: 8px;
+  }
+}
