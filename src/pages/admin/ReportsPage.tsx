@@ -17,6 +17,7 @@ export default function ReportsPage() {
   const sales = useSalesStore((s) => s.sales);
   const branches = useBranchStore((s) => s.branches);
   const adminFilterBranchId = useBranchStore((s) => s.adminFilterBranchId);
+  const setAdminFilterBranchId = useBranchStore((s) => s.setAdminFilterBranchId);
   const [range, setRange] = useState<RangeFilter>('hoy');
   const [viewingReceipt, setViewingReceipt] = useState<Sale | null>(null);
 
@@ -114,30 +115,38 @@ export default function ReportsPage() {
           <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold text-ink">
             <Building2 size={18} className="text-primary-500" /> Ventas por sucursal
           </h2>
+          <p className="-mt-2 mb-4 text-xs text-ink-soft">Toca una sucursal para filtrar todo el reporte por ella.</p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {salesByBranch.map(({ branch, total, count }) => (
-              <div
-                key={branch.id}
-                className={cn(
-                  'rounded-xl2 border-2 p-3.5 transition-colors',
-                  adminFilterBranchId === branch.id
-                    ? 'border-primary-400 bg-primary-50 dark:bg-primary-500/10'
-                    : 'border-border bg-field',
-                )}
-              >
-                <p className="truncate text-sm font-semibold text-ink">{branch.name}</p>
-                <p className="font-display text-xl font-extrabold tabular-nums text-ink">{formatCurrency(total)}</p>
-                <p className="mb-2 text-xs text-ink-muted">{count} venta{count === 1 ? '' : 's'}</p>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-cream-300">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(total / maxBranchTotal) * 100}%` }}
-                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    className="h-full rounded-full bg-gradient-to-r from-secondary-400 to-secondary-600"
-                  />
-                </div>
-              </div>
-            ))}
+            {salesByBranch.map(({ branch, total, count }) => {
+              const active = adminFilterBranchId === branch.id;
+              return (
+                <motion.button
+                  key={branch.id}
+                  type="button"
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setAdminFilterBranchId(active ? null : branch.id)}
+                  aria-pressed={active}
+                  className={cn(
+                    'rounded-xl2 border-2 p-3.5 text-left transition-all cursor-pointer',
+                    active
+                      ? 'border-primary-400 bg-primary-50 shadow-pop dark:bg-primary-500/10 dark:shadow-glow-primary'
+                      : 'border-border bg-field hover:border-primary-300 hover:bg-primary-50/50 hover:shadow-soft dark:hover:bg-primary-500/5',
+                  )}
+                >
+                  <p className="truncate text-sm font-semibold text-ink">{branch.name}</p>
+                  <p className="font-display text-xl font-extrabold tabular-nums text-ink">{formatCurrency(total)}</p>
+                  <p className="mb-2 text-xs text-ink-muted">{count} venta{count === 1 ? '' : 's'}</p>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-cream-300">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(total / maxBranchTotal) * 100}%` }}
+                      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                      className="h-full rounded-full bg-gradient-to-r from-secondary-400 to-secondary-600"
+                    />
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
         </Card>
 
