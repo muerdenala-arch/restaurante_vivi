@@ -155,7 +155,8 @@ INSERT INTO staff (id, name, pin, role, color, status, protected, branch_ids, cr
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO toppings (id, name, price_extra, stock_by_branch, low_stock_threshold) VALUES
-  ('papas-extra',    'Papas fritas extra',      8,   '{"central":40,"norte":24,"sur":14}', 8),
+  ('papas-extra',       'Papas fritas extra',      8,   '{"central":40,"norte":24,"sur":14}', 8),
+  ('arroz-chaufa-extra', 'Arroz chaufa extra',     8,   '{"central":30,"norte":18,"sur":11}', 8),
   ('salsa-aji',       'Salsa de ají',            2,   '{"central":60,"norte":36,"sur":21}', 10),
   ('salsa-golf',      'Salsa golf',              2,   '{"central":60,"norte":36,"sur":21}', 10),
   ('queso-extra',     'Queso extra',             5,   '{"central":30,"norte":18,"sur":11}', 8),
@@ -171,13 +172,13 @@ INSERT INTO products (
   ('p-combo-familiar-4', 'Combo Familiar x4', 'Combos Familiares', 'Pollo entero + papas familiares + ensalada + gaseosa 1.5L.', 95,
    'from-red-400 to-orange-500', '🍗',
    '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
-   '[]', false, '["papas-extra","salsa-aji","salsa-golf","queso-extra"]', true,
+   '[]', false, '["papas-extra","arroz-chaufa-extra","salsa-aji","salsa-golf","queso-extra"]', true,
    '{"central":12,"norte":7,"sur":4}', 4, 'combos'),
 
   ('p-combo-pareja-2', 'Combo Pareja x2', 'Combos Familiares', 'Medio pollo + papas + gaseosa 1L.', 55,
    'from-orange-400 to-amber-500', '🍗',
    '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
-   '[]', false, '["papas-extra","salsa-aji","salsa-golf"]', true,
+   '[]', false, '["papas-extra","arroz-chaufa-extra","salsa-aji","salsa-golf"]', true,
    '{"central":18,"norte":11,"sur":6}', 6, 'combos'),
 
   ('p-cuarto-papas', 'Cuarto de Pollo + Papas', 'Cuartos de Pollo', 'Cuarto de pollo broaster con papas fritas.', 28,
@@ -195,7 +196,7 @@ INSERT INTO products (
   ('p-medio-papas', 'Medio Pollo + Papas', 'Medios', 'Medio pollo broaster con papas fritas familiares.', 48,
    'from-red-400 to-orange-500', '🍗',
    '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
-   '[]', false, '["papas-extra","salsa-aji","salsa-golf","queso-extra"]', true,
+   '[]', false, '["papas-extra","arroz-chaufa-extra","salsa-aji","salsa-golf","queso-extra"]', true,
    '{"central":20,"norte":12,"sur":7}', 6, 'porciones'),
 
   ('p-medio-ensalada', 'Medio Pollo + Ensalada', 'Medios', 'Medio pollo broaster con ensalada fresca.', 48,
@@ -213,7 +214,7 @@ INSERT INTO products (
   ('p-pollo-entero-papas', 'Pollo Entero + Papas Grandes', 'Enteros', 'Pollo entero broaster con papas fritas grandes.', 98,
    'from-red-400 to-orange-500', '🍗',
    '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
-   '[]', false, '["papas-extra","salsa-aji","salsa-golf","queso-extra","pan"]', true,
+   '[]', false, '["papas-extra","arroz-chaufa-extra","salsa-aji","salsa-golf","queso-extra","pan"]', true,
    '{"central":8,"norte":5,"sur":3}', 4, 'unidades'),
 
   ('p-presa-pechuga', 'Presa - Pechuga', 'Presas', 'Presa individual de pechuga broaster.', 14,

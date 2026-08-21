@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Printer, Receipt } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
@@ -17,28 +16,13 @@ interface TicketProps {
 
 export function Ticket({ sale, onClose }: TicketProps) {
   const branch = useBranchStore((s) => s.branches.find((b) => b.id === sale?.branchId));
-  // Dispara la impresión térmica sola apenas el modal termina de aparecer — el botón
-  // "Imprimir" de abajo queda disponible para reimprimir, pero el cajero ya no tiene que
-  // acordarse de tocarlo la primera vez. El ref evita reabrir el diálogo de impresión en
-  // cada re-render mientras el mismo ticket sigue en pantalla.
-  //
-  // IMPORTANTE: no se dispara en un useEffect al montar — el modal entra con una animación
-  // (overlay + panel + este ícono, ver src/lib/motion.ts) y durante esos ~300-500ms el nodo
-  // ya existe en el DOM pero con opacity intermedia. El CSS de impresión fuerza
-  // `visibility: visible` en #thermal-receipt, pero eso NO corrige el opacity heredado de
-  // sus ancestros animados — imprimir en ese punto produce una hoja en blanco (o casi). Por
-  // eso el disparo cuelga de `onAnimationComplete` de este ícono, que es el último elemento
-  // en asentarse (spring con más rebote que el del panel), así que cuando se dispara ya no
-  // queda ninguna animación de entrada en curso.
-  const printedSaleId = useRef<string | null>(null);
 
+  // La impresión es 100% manual: al confirmar el pago primero se ve la vista previa del
+  // ticket en el modal "Venta completada", y solo se envía a la impresora cuando el cajero
+  // toca el botón "Imprimir" de abajo. Antes se disparaba window.print() apenas se confirmaba
+  // el pago, lo que abría el diálogo de impresión con el modal aún sin terminar de montar/
+  // animar en pantalla (hoja en blanco) — ya no hay ningún disparo automático.
   if (!sale) return null;
-
-  function handleEntranceComplete() {
-    if (!sale || printedSaleId.current === sale.id) return;
-    printedSaleId.current = sale.id;
-    window.print();
-  }
 
   return (
     <Modal open={!!sale} onClose={onClose} size="sm">
@@ -47,7 +31,6 @@ export function Ticket({ sale, onClose }: TicketProps) {
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 350, damping: 18 }}
-          onAnimationComplete={handleEntranceComplete}
           className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-secondary-100 text-secondary-600"
         >
           <CheckCircle2 size={36} />
@@ -115,11 +98,13 @@ export function Ticket({ sale, onClose }: TicketProps) {
         </div>
 
         <div className="mt-5 flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={() => window.print()}>
-            <Printer size={16} /> Imprimir
-          </Button>
-          <Button className="flex-1" onClick={onClose}>
+          <Button variant="outline" className="flex-1" onClick={onClose}>
             <Receipt size={16} /> Nueva venta
+          </Button>
+          {/* Único disparo de impresión de todo el flujo: nada de auto-print al confirmar
+              el pago, el cajero decide cuándo imprimir tocando este botón. */}
+          <Button className="flex-[1.3]" onClick={() => window.print()}>
+            <Printer size={16} /> Imprimir
           </Button>
         </div>
       </div>

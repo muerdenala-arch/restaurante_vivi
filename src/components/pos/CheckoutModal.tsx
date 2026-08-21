@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Banknote, Camera, ImageOff, QrCode, RefreshCcw, Zap } from 'lucide-react';
+import { Banknote, Camera, ImageOff, Maximize2, QrCode, RefreshCcw, X, Zap } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -25,6 +26,7 @@ export function CheckoutModal({ open, total, onClose, onConfirm }: CheckoutModal
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [qrZoomed, setQrZoomed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export function CheckoutModal({ open, total, onClose, onConfirm }: CheckoutModal
       setReceiptImage(null);
       setUploadError(null);
       setConfirming(false);
+      setQrZoomed(false);
     }
   }, [open]);
 
@@ -73,7 +76,8 @@ export function CheckoutModal({ open, total, onClose, onConfirm }: CheckoutModal
   const canConfirm = (method === 'efectivo' || !!receiptImage) && !confirming;
 
   return (
-    <Modal open={open} onClose={onClose} title="Cobrar" size="md">
+    <>
+      <Modal open={open} onClose={onClose} title="Cobrar" size="md">
       <div className="px-6 pb-6 pt-2">
         <div className="mb-5 rounded-xl2 bg-gradient-to-br from-primary-500 to-accent-500 p-4 text-center text-white shadow-pop">
           <p className="text-sm opacity-90">Total a pagar</p>
@@ -129,10 +133,20 @@ export function CheckoutModal({ open, total, onClose, onConfirm }: CheckoutModal
                     {activeQr.bankOrHolder ? `${activeQr.bankOrHolder} - ${activeQr.alias}` : activeQr.alias}
                   </p>
                   {/* Fondo SIEMPRE blanco y con margen amplio (quiet zone) — nunca usar tokens de
-                      tema aquí: cualquier cámara/lector debe poder escanear el QR sin importar el modo. */}
-                  <div className="relative mb-5 rounded-xl2 border-4 border-primary-200 bg-white p-5 shadow-soft dark:border-primary-400/70">
+                      tema aquí: cualquier cámara/lector debe poder escanear el QR sin importar el modo.
+                      Clickeable: lo abre en grande (lightbox) para que el cliente lo escanee más fácil
+                      desde su celular o desde el mostrador. */}
+                  <button
+                    type="button"
+                    onClick={() => setQrZoomed(true)}
+                    aria-label="Ampliar código QR"
+                    className="group relative mb-5 cursor-zoom-in rounded-xl2 border-4 border-primary-200 bg-white p-5 shadow-soft transition-transform hover:scale-[1.02] dark:border-primary-400/70"
+                  >
                     <img src={activeQr.image} alt={`QR de cobro — ${activeQr.alias}`} className="h-44 w-44 object-contain" />
-                  </div>
+                    <span className="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full bg-primary-500 text-white shadow-pop transition-transform group-hover:scale-110">
+                      <Maximize2 size={16} />
+                    </span>
+                  </button>
                 </>
               ) : (
                 <div className="mb-5 flex flex-col items-center gap-2 rounded-xl2 border-2 border-dashed border-border-strong bg-field px-6 py-8 text-center">
@@ -166,7 +180,57 @@ export function CheckoutModal({ open, total, onClose, onConfirm }: CheckoutModal
           {confirming ? 'Subiendo comprobante…' : 'Confirmar pago'}
         </Button>
       </div>
-    </Modal>
+      </Modal>
+
+      {/* Lightbox del QR en un portal a document.body: la vista ampliada tiene que cubrir
+          la pantalla completa por encima del modal de Cobrar, y position:fixed anidado
+          dentro de un motion.div animado (el panel del Modal) queda "atrapado" por su
+          transform — con portal se escapa de ese contexto y sí llega a pantalla completa. */}
+      {activeQr &&
+        createPortal(
+          <AnimatePresence>
+            {qrZoomed && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-6 backdrop-blur-sm"
+                onClick={() => setQrZoomed(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="relative flex w-full max-w-sm flex-col items-center rounded-xl3 bg-white p-6 shadow-card"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setQrZoomed(false)}
+                    aria-label="Cerrar"
+                    className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100 cursor-pointer"
+                  >
+                    <X size={20} />
+                  </button>
+                  <p className="mb-4 max-w-[26ch] text-center text-base font-bold text-zinc-900">
+                    Escanea para pagar vía{' '}
+                    {activeQr.bankOrHolder ? `${activeQr.bankOrHolder} - ${activeQr.alias}` : activeQr.alias}
+                  </p>
+                  <img
+                    src={activeQr.image}
+                    alt={`QR de cobro — ${activeQr.alias}`}
+                    className="aspect-square w-full max-w-[80vw] object-contain sm:max-w-sm"
+                  />
+                  <p className="mt-4 text-center text-xs text-zinc-500">Toca fuera del código para cerrar</p>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
+    </>
   );
 }
 

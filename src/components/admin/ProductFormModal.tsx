@@ -6,8 +6,7 @@ import { optionActiveClasses, optionInactiveClasses } from '@/lib/optionStyles';
 import { useCatalogStore } from '@/store/catalogStore';
 import { useBranchStore } from '@/store/branchStore';
 import { SIZES, CATEGORIES } from '@/data/seed';
-import { BASE_LIQUIDA_LABEL } from '@/types';
-import type { BaseLiquida, Product } from '@/types';
+import type { Product } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface ProductFormModalProps {
@@ -16,7 +15,6 @@ interface ProductFormModalProps {
   onClose: () => void;
 }
 
-const ALL_BASE_LIQUIDA: BaseLiquida[] = ['agua', 'leche', 'leche_almendras', 'yogurt'];
 const EMOJI_OPTIONS = ['🍗', '🍟', '🍚', '🥗', '🥤', '🍌', '💧', '🍖', '🧆', '🌶️', '🧀'];
 const GRADIENT_OPTIONS = [
   'from-orange-400 to-amber-500',
@@ -36,8 +34,6 @@ const emptyForm = {
   lowStockThreshold: '8',
   emoji: EMOJI_OPTIONS[0],
   gradient: GRADIENT_OPTIONS[0],
-  allowSugarLevel: false,
-  baseLiquidaOptions: [] as BaseLiquida[],
   toppingIds: [] as string[],
 };
 
@@ -59,23 +55,12 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
         lowStockThreshold: String(product.lowStockThreshold),
         emoji: product.emoji,
         gradient: product.gradient,
-        allowSugarLevel: product.allowSugarLevel,
-        baseLiquidaOptions: product.baseLiquidaOptions,
         toppingIds: product.toppingIds,
       });
     } else {
       setForm(emptyForm);
     }
   }, [product, open]);
-
-  function toggleBase(base: BaseLiquida) {
-    setForm((f) => ({
-      ...f,
-      baseLiquidaOptions: f.baseLiquidaOptions.includes(base)
-        ? f.baseLiquidaOptions.filter((b) => b !== base)
-        : [...f.baseLiquidaOptions, base],
-    }));
-  }
 
   function toggleTopping(id: string) {
     setForm((f) => ({
@@ -97,8 +82,10 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
       gradient: form.gradient,
       emoji: form.emoji,
       sizes: SIZES,
-      baseLiquidaOptions: form.baseLiquidaOptions,
-      allowSugarLevel: form.allowSugarLevel,
+      // La pollería no maneja bases líquidas ni nivel de azúcar (herencia de la juguería
+      // original) — quedan siempre vacío/false para que ningún producto nuevo los active.
+      baseLiquidaOptions: [],
+      allowSugarLevel: false,
       toppingIds: form.toppingIds,
       active: product?.active ?? true,
       stockByBranch,
@@ -177,23 +164,6 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
           onChange={(e) => setForm((f) => ({ ...f, lowStockThreshold: e.target.value }))}
         />
 
-        <div className="flex items-center gap-3">
-          <span className={cn(fieldLabelClasses, 'mb-0')}>Permite nivel de azúcar</span>
-          <button
-            type="button"
-            onClick={() => setForm((f) => ({ ...f, allowSugarLevel: !f.allowSugarLevel }))}
-            className={cn(
-              'relative h-7 w-12 flex-shrink-0 rounded-full transition-colors cursor-pointer',
-              form.allowSugarLevel ? 'bg-secondary-500' : 'bg-zinc-300 dark:bg-zinc-700',
-            )}
-          >
-            <span
-              className="absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all"
-              style={{ left: form.allowSugarLevel ? '1.6rem' : '0.25rem' }}
-            />
-          </button>
-        </div>
-
         <div className="sm:col-span-2">
           <p className={fieldLabelClasses}>Ícono</p>
           <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
@@ -230,25 +200,6 @@ export function ProductFormModal({ product, open, onClose }: ProductFormModalPro
                   form.gradient === g ? 'border-white ring-2 ring-amber-500 scale-105 dark:border-zinc-900' : 'border-transparent',
                 )}
               />
-            ))}
-          </div>
-        </div>
-
-        <div className="sm:col-span-2">
-          <p className={fieldLabelClasses}>Bases líquidas disponibles</p>
-          <div className="flex flex-wrap gap-2">
-            {ALL_BASE_LIQUIDA.map((b) => (
-              <button
-                key={b}
-                type="button"
-                onClick={() => toggleBase(b)}
-                className={cn(
-                  'rounded-full border px-3.5 py-2 text-sm transition-colors cursor-pointer',
-                  form.baseLiquidaOptions.includes(b) ? optionActiveClasses : optionInactiveClasses,
-                )}
-              >
-                {BASE_LIQUIDA_LABEL[b]}
-              </button>
             ))}
           </div>
         </div>
