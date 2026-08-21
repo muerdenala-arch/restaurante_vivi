@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Printer, Receipt } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
@@ -17,33 +17,28 @@ interface TicketProps {
 
 export function Ticket({ sale, onClose }: TicketProps) {
   const branch = useBranchStore((s) => s.branches.find((b) => b.id === sale?.branchId));
-  // Dispara la impresión térmica sola apenas se confirma el cobro — el botón "Imprimir"
-  // de abajo queda disponible para reimprimir, pero el cajero ya no tiene que acordarse
-  // de tocarlo la primera vez. El ref evita reabrir el diálogo de impresión en cada
-  // re-render mientras el mismo ticket sigue en pantalla.
+  // Dispara la impresión térmica sola apenas el modal termina de aparecer — el botón
+  // "Imprimir" de abajo queda disponible para reimprimir, pero el cajero ya no tiene que
+  // acordarse de tocarlo la primera vez. El ref evita reabrir el diálogo de impresión en
+  // cada re-render mientras el mismo ticket sigue en pantalla.
+  //
+  // IMPORTANTE: no se dispara en un useEffect al montar — el modal entra con una animación
+  // (overlay + panel + este ícono, ver src/lib/motion.ts) y durante esos ~300-500ms el nodo
+  // ya existe en el DOM pero con opacity intermedia. El CSS de impresión fuerza
+  // `visibility: visible` en #thermal-receipt, pero eso NO corrige el opacity heredado de
+  // sus ancestros animados — imprimir en ese punto produce una hoja en blanco (o casi). Por
+  // eso el disparo cuelga de `onAnimationComplete` de este ícono, que es el último elemento
+  // en asentarse (spring con más rebote que el del panel), así que cuando se dispara ya no
+  // queda ninguna animación de entrada en curso.
   const printedSaleId = useRef<string | null>(null);
-  const receiptRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!sale || printedSaleId.current === sale.id) return;
-    printedSaleId.current = sale.id;
-    // El efecto ya corre después de que React montó el DOM (`#thermal-receipt` existe acá),
-    // pero se espera un doble rAF para garantizar que el navegador ya pintó ese frame antes
-    // de abrir el diálogo de impresión — evita el "ticket en blanco" ocasional cuando
-    // window.print() se dispara en el mismo tick que el commit.
-    let raf1 = 0;
-    let raf2 = 0;
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        if (receiptRef.current) window.print();
-      });
-    });
-    return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-    };
-  }, [sale]);
 
   if (!sale) return null;
+
+  function handleEntranceComplete() {
+    if (!sale || printedSaleId.current === sale.id) return;
+    printedSaleId.current = sale.id;
+    window.print();
+  }
 
   return (
     <Modal open={!!sale} onClose={onClose} size="sm">
@@ -52,6 +47,7 @@ export function Ticket({ sale, onClose }: TicketProps) {
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 350, damping: 18 }}
+          onAnimationComplete={handleEntranceComplete}
           className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-secondary-100 text-secondary-600"
         >
           <CheckCircle2 size={36} />
@@ -60,7 +56,6 @@ export function Ticket({ sale, onClose }: TicketProps) {
 
         <div
           id="thermal-receipt"
-          ref={receiptRef}
           className="rounded-xl2 border-2 border-dashed border-border bg-cream-100 p-4 font-mono text-xs text-ink"
         >
           <div className="mb-2 text-center">

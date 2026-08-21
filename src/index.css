@@ -123,11 +123,22 @@
 
 /* Impresión del ticket térmico: al imprimir, TODA la interfaz (fondo, modal, ícono de
    check, botones "Imprimir"/"Nueva venta", etc.) se oculta — solo se envía a la impresora
-   el contenedor #thermal-receipt (58mm/80mm), sin importar dónde esté anidado en el DOM. */
+   el contenedor #thermal-receipt, sin importar dónde esté anidado en el DOM. */
 @media print {
+  /* `size: 80mm auto` (no "auto" a secas) es lo que evita la hoja carta/A4 con márgenes
+     gigantes y el ticket diminuto en una esquina: le pide al navegador una página del
+     ancho real del papel térmico (alto libre, crece con el contenido). Los drivers de
+     impresoras térmicas y "Guardar como PDF" de Chrome/Edge lo respetan sin que el cajero
+     tenga que elegir el tamaño de papel a mano. */
   @page {
+    size: 80mm auto;
     margin: 0;
-    size: auto;
+  }
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
   }
   body * {
     visibility: hidden !important;
@@ -135,6 +146,12 @@
   #thermal-receipt,
   #thermal-receipt * {
     visibility: visible !important;
+    /* El ticket fuerza tinta negra sobre blanco sin importar el tema activo — en modo
+       oscuro el texto normal es casi blanco (--color-text) y saldría invisible sobre el
+       papel. */
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
   #thermal-receipt {
     position: absolute;
@@ -144,5 +161,9 @@
     max-width: 80mm;
     margin: 0;
     padding: 8px;
+    background: #fff !important;
+  }
+  #thermal-receipt img {
+    filter: grayscale(1) contrast(1.1);
   }
 }
