@@ -46,7 +46,7 @@ async function handler(req: VercelRequest, res: VercelResponse) {
         body.emoji ?? '',
         JSON.stringify(body.sizes ?? []),
         JSON.stringify(body.baseLiquidaOptions ?? []),
-        body.allowSugarLevel ?? true,
+        body.allowSugarLevel ?? false,
         JSON.stringify(body.toppingIds ?? []),
         body.active ?? true,
         JSON.stringify(body.stockByBranch ?? {}),

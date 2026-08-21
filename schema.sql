@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS staff (
   updated_at  timestamptz NOT NULL DEFAULT now()
 );
 
--- ── Toppings (agregados) ─────────────────────────────────────────────────
+-- ── Agregados / Extras (guarniciones, salsas, porciones extra) ───────────
 CREATE TABLE IF NOT EXISTS toppings (
   id                  text PRIMARY KEY,
   name                text NOT NULL,
@@ -59,11 +59,13 @@ CREATE TABLE IF NOT EXISTS products (
   base_price           numeric(10, 2) NOT NULL DEFAULT 0,
   gradient             text NOT NULL DEFAULT '',
   emoji                text NOT NULL DEFAULT '',
-  -- [{ id, label, ounces, priceDelta }]
+  -- [{ id, label, priceDelta }] — un producto con 1 sola talla usa priceDelta 0 (precio =
+  -- base_price); con varias, cada una define su propio precio absoluto en el Admin y acá se
+  -- guarda como delta sobre la primera (ver ProductFormModal.tsx).
   sizes                jsonb NOT NULL DEFAULT '[]',
   -- ["agua", "leche", ...] — sin uso en el catálogo de pollería, se deja vacío
   base_liquida_options jsonb NOT NULL DEFAULT '[]',
-  allow_sugar_level    boolean NOT NULL DEFAULT true,
+  allow_sugar_level    boolean NOT NULL DEFAULT false,
   -- ["papas-extra", "salsa-aji", ...]
   topping_ids          jsonb NOT NULL DEFAULT '[]',
   active               boolean NOT NULL DEFAULT true,
@@ -171,121 +173,121 @@ INSERT INTO products (
 ) VALUES
   ('p-combo-familiar-4', 'Combo Familiar x4', 'Combos Familiares', 'Pollo entero + papas familiares + ensalada + gaseosa 1.5L.', 95,
    'from-red-400 to-orange-500', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["papas-extra","arroz-chaufa-extra","salsa-aji","salsa-golf","queso-extra"]', true,
    '{"central":12,"norte":7,"sur":4}', 4, 'combos'),
 
   ('p-combo-pareja-2', 'Combo Pareja x2', 'Combos Familiares', 'Medio pollo + papas + gaseosa 1L.', 55,
    'from-orange-400 to-amber-500', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["papas-extra","arroz-chaufa-extra","salsa-aji","salsa-golf"]', true,
    '{"central":18,"norte":11,"sur":6}', 6, 'combos'),
 
   ('p-cuarto-papas', 'Cuarto de Pollo + Papas', 'Cuartos de Pollo', 'Cuarto de pollo broaster con papas fritas.', 28,
    'from-amber-400 to-orange-600', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["salsa-aji","salsa-golf","queso-extra","pan"]', true,
    '{"central":35,"norte":21,"sur":12}', 10, 'porciones'),
 
   ('p-cuarto-arroz', 'Cuarto de Pollo + Arroz Chaufa', 'Cuartos de Pollo', 'Cuarto de pollo broaster con arroz chaufa.', 28,
    'from-orange-400 to-amber-500', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["salsa-aji","salsa-golf","pan"]', true,
    '{"central":28,"norte":17,"sur":10}', 10, 'porciones'),
 
   ('p-medio-papas', 'Medio Pollo + Papas', 'Medios', 'Medio pollo broaster con papas fritas familiares.', 48,
    'from-red-400 to-orange-500', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["papas-extra","arroz-chaufa-extra","salsa-aji","salsa-golf","queso-extra"]', true,
    '{"central":20,"norte":12,"sur":7}', 6, 'porciones'),
 
   ('p-medio-ensalada', 'Medio Pollo + Ensalada', 'Medios', 'Medio pollo broaster con ensalada fresca.', 48,
    'from-amber-400 to-orange-600', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["ensalada-extra","salsa-aji","queso-extra"]', true,
    '{"central":16,"norte":10,"sur":6}', 6, 'porciones'),
 
   ('p-pollo-entero', 'Pollo Entero a la Broaster', 'Enteros', 'Pollo entero broaster, crocante y jugoso.', 85,
    'from-orange-500 to-red-600', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["salsa-aji","salsa-golf","queso-extra","pan"]', true,
    '{"central":10,"norte":6,"sur":4}', 4, 'unidades'),
 
   ('p-pollo-entero-papas', 'Pollo Entero + Papas Grandes', 'Enteros', 'Pollo entero broaster con papas fritas grandes.', 98,
    'from-red-400 to-orange-500', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["papas-extra","arroz-chaufa-extra","salsa-aji","salsa-golf","queso-extra","pan"]', true,
    '{"central":8,"norte":5,"sur":3}', 4, 'unidades'),
 
   ('p-presa-pechuga', 'Presa - Pechuga', 'Presas', 'Presa individual de pechuga broaster.', 14,
    'from-yellow-300 to-orange-400', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["salsa-aji","salsa-golf"]', true,
    '{"central":40,"norte":24,"sur":14}', 12, 'unidades'),
 
   ('p-presa-pierna', 'Presa - Pierna', 'Presas', 'Presa individual de pierna broaster.', 12,
    'from-amber-400 to-orange-600', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["salsa-aji","salsa-golf"]', true,
    '{"central":45,"norte":27,"sur":16}', 12, 'unidades'),
 
   ('p-presa-ala', 'Presa - Ala', 'Presas', 'Presa individual de ala broaster.', 10,
    'from-orange-400 to-amber-500', '🍗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["salsa-aji","salsa-golf"]', true,
    '{"central":50,"norte":30,"sur":18}', 15, 'unidades'),
 
   ('p-papas-personal', 'Papas Fritas Personal', 'Papas Fritas', 'Porción personal de papas fritas crocantes.', 12,
    'from-yellow-300 to-orange-400', '🍟',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["salsa-aji","salsa-golf","queso-extra"]', true,
    '{"central":30,"norte":18,"sur":11}', 10, 'porciones'),
 
   ('p-papas-familiar', 'Papas Fritas Familiar', 'Papas Fritas', 'Porción familiar de papas fritas crocantes.', 22,
    'from-amber-400 to-orange-600', '🍟',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["salsa-aji","salsa-golf","queso-extra"]', true,
    '{"central":18,"norte":11,"sur":6}', 6, 'porciones'),
 
   ('p-arroz-chaufa', 'Arroz Chaufa', 'Arroz Chaufa/Plátano', 'Arroz chaufa salteado con vegetales.', 15,
    'from-emerald-400 to-teal-500', '🍚',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["salsa-aji"]', true,
    '{"central":22,"norte":13,"sur":8}', 8, 'porciones'),
 
   ('p-platano-frito', 'Plátano Frito', 'Arroz Chaufa/Plátano', 'Plátano maduro frito en tajadas.', 10,
    'from-yellow-300 to-orange-400', '🍌',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '[]', true,
    '{"central":20,"norte":12,"sur":7}', 8, 'porciones'),
 
   ('p-ensalada-clasica', 'Ensalada Clásica', 'Ensaladas', 'Lechuga, tomate, cebolla y zanahoria.', 12,
    'from-lime-400 to-emerald-500', '🥗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["queso-extra"]', true,
    '{"central":20,"norte":12,"sur":7}', 8, 'porciones'),
 
   ('p-ensalada-cesar', 'Ensalada César', 'Ensaladas', 'Lechuga, pollo, crutones, parmesano y aderezo césar.', 16,
    'from-emerald-400 to-teal-500', '🥗',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '["queso-extra"]', true,
    '{"central":14,"norte":8,"sur":5}', 6, 'porciones'),
 
   ('p-gaseosa-personal', 'Gaseosa Personal 350ml', 'Refrescos y Gaseosas', 'Gaseosa en lata o botella personal.', 7,
    'from-sky-400 to-blue-500', '🥤',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '[]', true,
    '{"central":60,"norte":36,"sur":21}', 15, 'unidades'),
 
   ('p-gaseosa-litro', 'Gaseosa 1.5L', 'Refrescos y Gaseosas', 'Gaseosa familiar de 1.5 litros.', 15,
    'from-sky-400 to-blue-500', '🥤',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '[]', true,
    '{"central":30,"norte":18,"sur":11}', 10, 'unidades'),
 
   ('p-agua-mineral', 'Agua Mineral', 'Refrescos y Gaseosas', 'Agua mineral con o sin gas, 600ml.', 6,
    'from-sky-400 to-blue-500', '💧',
-   '[{"id":"unico","label":"Único","ounces":0,"priceDelta":0}]',
+   '[{"id":"unico","label":"Único","priceDelta":0}]',
    '[]', false, '[]', true,
    '{"central":40,"norte":24,"sur":14}', 12, 'unidades')
 ON CONFLICT (id) DO NOTHING;

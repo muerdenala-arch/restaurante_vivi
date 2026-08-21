@@ -84,7 +84,7 @@ export default function InventoryPage() {
           ))}
         </motion.div>
 
-        <h2 className="mb-3 font-display text-lg font-bold text-ink">Agregados / Toppings</h2>
+        <h2 className="mb-3 font-display text-lg font-bold text-ink">Agregados / Extras</h2>
         <motion.div
           key={`toppings-${selectedBranchId}`}
           variants={staggerContainer}
@@ -96,7 +96,7 @@ export default function InventoryPage() {
             <StockRow
               key={topping.id}
               name={topping.name}
-              category="Topping"
+              category="Agregado"
               stock={topping.stockByBranch[selectedBranchId] ?? 0}
               threshold={topping.lowStockThreshold}
               unit="porciones"

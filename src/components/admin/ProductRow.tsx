@@ -11,6 +11,7 @@ export function ProductRow({ product, onEdit }: { product: Product; onEdit: () =
   const removeProduct = useCatalogStore((s) => s.removeProduct);
   const totalStock = Object.values(product.stockByBranch).reduce((sum, n) => sum + n, 0);
   const lowStock = totalStock <= product.lowStockThreshold;
+  const hasPriceRange = product.sizes.length > 1 && product.sizes.some((s) => s.priceDelta !== 0);
 
   return (
     <Card className="flex items-center gap-4 p-3.5">
@@ -24,7 +25,9 @@ export function ProductRow({ product, onEdit }: { product: Product; onEdit: () =
           {lowStock && product.active && <Badge tone="warning">Stock bajo</Badge>}
         </div>
         <p className="truncate text-sm text-ink-muted">
-          {product.category} · {formatCurrency(product.basePrice)} · Stock total: {totalStock}
+          {product.category} · {hasPriceRange && 'Desde '}
+          {formatCurrency(product.basePrice)}
+          {product.sizes.length > 1 && ` (${product.sizes.length} tamaños)`} · Stock total: {totalStock}
         </p>
       </div>
 

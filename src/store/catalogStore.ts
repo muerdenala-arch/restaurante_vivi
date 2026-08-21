@@ -16,6 +16,8 @@ interface CatalogState {
   toggleActive: (id: string) => void;
   adjustStock: (id: string, branchId: string, delta: number) => void;
   setStock: (id: string, branchId: string, value: number) => void;
+  createTopping: (data: Omit<Topping, 'id'>) => Topping;
+  removeTopping: (id: string) => void;
   adjustToppingStock: (id: string, branchId: string, delta: number) => void;
   setToppingStock: (id: string, branchId: string, value: number) => void;
   stockFor: (product: Pick<Product, 'stockByBranch'>, branchId: string) => number;
@@ -81,6 +83,16 @@ export const useCatalogStore = create<CatalogState>()((set, get) => ({
     const stockByBranch = { ...product.stockByBranch, [branchId]: Math.max(0, value) };
     set((state) => ({ products: state.products.map((p) => (p.id === id ? { ...p, stockByBranch } : p)) }));
     api.products.update(id, { stockByBranch }).catch((err) => console.error('No se pudo ajustar el stock:', err));
+  },
+  createTopping: (data) => {
+    const topping: Topping = { ...data, id: uid('topping') };
+    set((state) => ({ toppings: [...state.toppings, topping] }));
+    api.toppings.create(topping).catch((err) => console.error('No se pudo crear el agregado:', err));
+    return topping;
+  },
+  removeTopping: (id) => {
+    set((state) => ({ toppings: state.toppings.filter((t) => t.id !== id) }));
+    api.toppings.remove(id).catch((err) => console.error('No se pudo eliminar el agregado:', err));
   },
   adjustToppingStock: (id, branchId, delta) => {
     const topping = get().toppings.find((t) => t.id === id);

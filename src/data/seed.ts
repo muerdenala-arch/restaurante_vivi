@@ -36,7 +36,7 @@ function stockPerBranch(central: number): Record<string, number> {
 // Único tamaño para todo el catálogo: la porción ya la define el producto en sí
 // (cuarto/medio/entero/presa/combo son productos distintos, no variantes de tamaño de
 // uno solo), así que "Tamaño" queda como una sola opción neutra en vez de una escala.
-export const SIZES: SizeOption[] = [{ id: 'unico', label: 'Único', ounces: 0, priceDelta: 0 }];
+export const SIZES: SizeOption[] = [{ id: 'unico', label: 'Único', priceDelta: 0 }];
 
 export const TOPPINGS: Topping[] = [
   { id: 'papas-extra', name: 'Papas fritas extra', priceExtra: 8, stockByBranch: stockPerBranch(40), lowStockThreshold: 8 },

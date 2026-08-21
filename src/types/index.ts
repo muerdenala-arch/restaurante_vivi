@@ -50,8 +50,10 @@ export const NIVEL_AZUCAR_LABEL: Record<NivelAzucar, string> = {
 export interface SizeOption {
   id: string;
   label: string;
-  ounces: number;
-  priceDelta: number; // se suma al precio base
+  /** Delta sobre basePrice — el primer tamaño de un producto siempre tiene priceDelta 0
+   *  (define el precio base); las variantes siguientes se editan como precio absoluto en
+   *  el Admin y acá se guardan como delta sobre esa primera. */
+  priceDelta: number;
 }
 
 export interface Topping {

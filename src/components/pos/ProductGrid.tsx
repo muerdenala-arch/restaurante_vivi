@@ -95,6 +95,9 @@ const ProductCard = memo(function ProductCard({
   const stock = product.stockByBranch[branchId] ?? 0;
   const lowStock = stock <= product.lowStockThreshold;
   const outOfStock = stock <= 0;
+  // basePrice ya es el precio de la primera variante — con 2+ tamaños de precios distintos
+  // se aclara "Desde" para no dar a entender que ese es el único precio posible.
+  const hasPriceRange = product.sizes.length > 1 && product.sizes.some((s) => s.priceDelta !== 0);
 
   return (
     <motion.button
@@ -112,6 +115,7 @@ const ProductCard = memo(function ProductCard({
         <p className="text-xs text-ink-muted line-clamp-1">{product.description}</p>
         <div className="mt-auto flex items-center justify-between pt-1.5">
           <span className="font-display text-base font-bold text-primary-600">
+            {hasPriceRange && <span className="mr-0.5 text-xs font-semibold opacity-70">Desde</span>}
             {formatCurrency(product.basePrice)}
           </span>
           {outOfStock ? (

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Minus, Plus, Check } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
@@ -34,6 +34,21 @@ export function ModifierModal({ product, branchId, onClose }: ModifierModalProps
     () => toppingsCatalog.filter((t) => product?.toppingIds.includes(t.id)),
     [toppingsCatalog, product],
   );
+
+  // Sin esto, cancelar (o tocar afuera) sin agregar dejaba el tamaño/agregados/notas del
+  // producto anterior "pegados" en el estado — al abrir el siguiente producto podía
+  // aparecer con un agregado ya tildado que nunca tocaste (si compartía topping_id con el
+  // anterior) o cantidad >1 heredada. handleReset() solo corría en el camino de "Agregar".
+  useEffect(() => {
+    if (product) {
+      setSizeId(product.sizes[0]?.id ?? '');
+      setBaseLiquida(null);
+      setSugarLevel(null);
+      setSelectedToppings([]);
+      setQuantity(1);
+      setNotes('');
+    }
+  }, [product]);
 
   if (!product) return null;
 
@@ -74,16 +89,22 @@ export function ModifierModal({ product, branchId, onClose }: ModifierModalProps
           </div>
         </div>
 
-        <Section title="Tamaño">
-          <div className="grid grid-cols-3 gap-2.5">
-            {product.sizes.map((s) => (
-              <OptionPill key={s.id} active={s.id === sizeId} onClick={() => setSizeId(s.id)}>
-                <span className="font-semibold">{s.label}</span>
-                {s.priceDelta > 0 && <span className="text-xs opacity-75">+{formatCurrency(s.priceDelta)}</span>}
-              </OptionPill>
-            ))}
-          </div>
-        </Section>
+        {/* Con un solo tamaño (el caso normal: cuartos, presas, combos puntuales) no tiene
+            sentido mostrar un selector con una única opción fija — solo aparece cuando el
+            producto tiene 2+ variantes configuradas en el Admin, y cada botón muestra el
+            precio real de esa variante (no un "+delta" críptico). */}
+        {product.sizes.length > 1 && (
+          <Section title="Tamaño">
+            <div className="grid grid-cols-3 gap-2.5">
+              {product.sizes.map((s) => (
+                <OptionPill key={s.id} active={s.id === sizeId} onClick={() => setSizeId(s.id)}>
+                  <span className="font-semibold">{s.label}</span>
+                  <span className="text-xs opacity-75">{formatCurrency(product.basePrice + s.priceDelta)}</span>
+                </OptionPill>
+              ))}
+            </div>
+          </Section>
+        )}
 
         {product.baseLiquidaOptions.length > 0 && (
           <Section title="Base líquida">
@@ -110,7 +131,7 @@ export function ModifierModal({ product, branchId, onClose }: ModifierModalProps
         )}
 
         {availableToppings.length > 0 && (
-          <Section title="Agregados / Toppings">
+          <Section title="Agregados / Extras">
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               {availableToppings.map((t) => {
                 const outOfStock = (t.stockByBranch[branchId] ?? 0) <= 0;

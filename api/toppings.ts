@@ -17,6 +17,44 @@ async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  if (req.method === 'POST' && !id) {
+    const body = requireBody<Topping>(req);
+    const rows = await query<Topping>(
+      `insert into toppings (id, name, price_extra, stock_by_branch, low_stock_threshold)
+       values ($1, $2, $3, $4, $5)
+       on conflict (id) do update set
+         name = excluded.name, price_extra = excluded.price_extra,
+         stock_by_branch = excluded.stock_by_branch, low_stock_threshold = excluded.low_stock_threshold,
+         updated_at = now()
+       returning ${SELECT_COLUMNS}`,
+      [
+        body.id,
+        body.name,
+        body.priceExtra ?? 0,
+        JSON.stringify(body.stockByBranch ?? {}),
+        body.lowStockThreshold ?? 0,
+      ],
+    );
+    res.status(201).json(rows[0]);
+    return;
+  }
+
+  if (req.method === 'DELETE' && id) {
+    // No se borra si algún producto todavía lo tiene entre sus agregados — evitaría que el
+    // POS reciba un topping_id "fantasma" que ya no existe en la tabla toppings.
+    const inUse = await queryOne<{ id: string }>(
+      `select id from products where topping_ids @> $1::jsonb limit 1`,
+      [JSON.stringify([id])],
+    );
+    if (inUse) {
+      res.status(409).json({ error: 'Este agregado está en uso por al menos un producto. Quítalo de ahí primero.' });
+      return;
+    }
+    await query('delete from toppings where id = $1', [id]);
+    res.status(204).end();
+    return;
+  }
+
   if (req.method === 'PATCH' && id) {
     const body = requireBody<Partial<Topping>>(req);
     const topping = await queryOne<Topping>(
@@ -44,7 +82,7 @@ async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  methodNotAllowed(res, ['GET', 'PATCH']);
+  methodNotAllowed(res, ['GET', 'POST', 'PATCH', 'DELETE']);
 }
 
 export default withErrorHandling(handler);
