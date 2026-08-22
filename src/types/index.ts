@@ -103,6 +103,9 @@ export interface CartItem {
 
 export type PaymentMethod = 'efectivo' | 'qr';
 
+/** Tipo de consumo del pedido. */
+export type OrderType = 'DINE_IN' | 'TAKE_AWAY';
+
 export interface Payment {
   method: PaymentMethod;
   amount: number;
@@ -117,6 +120,10 @@ export interface Sale {
   subtotal: number;
   total: number;
   payment: Payment;
+  /** Tipo de consumo: comer en el local o llevar. Por defecto 'DINE_IN'. */
+  orderType: OrderType;
+  /** Número de mesa opcional — solo relevante cuando orderType === 'DINE_IN'. */
+  tableNumber?: string;
   cashierId: string;
   cashierName: string;
   registerSessionId: string;

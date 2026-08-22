@@ -6,7 +6,8 @@ import type { Sale } from '../src/types';
 const SELECT_COLUMNS = `
   id, ticket_number as "ticketNumber", items, subtotal, total, payment,
   cashier_id as "cashierId", cashier_name as "cashierName",
-  register_session_id as "registerSessionId", branch_id as "branchId", created_at as "createdAt"
+  register_session_id as "registerSessionId", branch_id as "branchId", created_at as "createdAt",
+  COALESCE(order_type, 'DINE_IN') as "orderType", table_number as "tableNumber"
 `;
 
 async function handler(req: VercelRequest, res: VercelResponse) {
@@ -24,8 +25,8 @@ async function handler(req: VercelRequest, res: VercelResponse) {
     // entre todos los dispositivos, así nunca se repite un número aunque dos cajeros
     // cobren al mismo instante en sucursales distintas.
     const rows = await query<Sale>(
-      `insert into sales (id, items, subtotal, total, payment, cashier_id, cashier_name, register_session_id, branch_id)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `insert into sales (id, items, subtotal, total, payment, cashier_id, cashier_name, register_session_id, branch_id, order_type, table_number)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        returning ${SELECT_COLUMNS}`,
       [
         body.id,
@@ -37,6 +38,8 @@ async function handler(req: VercelRequest, res: VercelResponse) {
         body.cashierName,
         body.registerSessionId,
         body.branchId,
+        body.orderType ?? 'DINE_IN',
+        body.tableNumber ?? null,
       ],
     );
     res.status(201).json(rows[0]);

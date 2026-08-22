@@ -57,6 +57,16 @@ export function Ticket({ sale, onClose }: TicketProps) {
             <p className="text-[11px] text-ink-muted">Ticket #{sale.ticketNumber}</p>
             <p className="text-[11px] text-ink-muted">{formatDateTime(sale.createdAt)}</p>
             <p className="text-[11px] text-ink-muted">Cajero: {sale.cashierName}</p>
+            {/* ── Tipo de consumo ── */}
+            {sale.orderType === 'TAKE_AWAY' ? (
+              <p className="mt-0.5 text-[11px] font-extrabold uppercase tracking-widest text-ink">
+                ★ PARA LLEVAR ★
+              </p>
+            ) : (
+              <p className="mt-0.5 text-[11px] font-semibold text-ink-muted">
+                Tipo: {sale.tableNumber ? `Mesa #${sale.tableNumber}` : 'En mesa'}
+              </p>
+            )}
           </div>
           <div className="my-2 border-t border-dashed border-ink-soft/50" />
           {sale.items.map((item) => (

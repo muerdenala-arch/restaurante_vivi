@@ -138,6 +138,11 @@ CREATE INDEX IF NOT EXISTS idx_register_sessions_status ON register_sessions (st
 CREATE INDEX IF NOT EXISTS idx_register_sessions_opened_at ON register_sessions (opened_at DESC);
 CREATE INDEX IF NOT EXISTS idx_qr_codes_branch ON qr_codes (branch_id);
 
+-- ── Tipo de consumo (migración aditiva, re-ejecutable) ─────────────────────
+-- order_type: 'DINE_IN' = en mesa | 'TAKE_AWAY' = para llevar
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS order_type  text NOT NULL DEFAULT 'DINE_IN';
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS table_number text;
+
 -- ============================================================================
 -- Datos semilla — mismos valores que src/data/seed.ts, para que el primer
 -- arranque contra Neon se vea igual que la demo local. No pisa nada si ya

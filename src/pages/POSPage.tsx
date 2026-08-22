@@ -15,7 +15,7 @@ import { useCatalogStore } from '@/store/catalogStore';
 import { useRegisterStore } from '@/store/registerStore';
 import { useSalesStore } from '@/store/salesStore';
 import { formatCurrency } from '@/lib/utils';
-import type { Payment, Product, Sale } from '@/types';
+import type { OrderType, Payment, Product, Sale } from '@/types';
 
 export default function POSPage() {
   const currentUser = useAuthStore((s) => s.currentUser)!;
@@ -42,7 +42,7 @@ export default function POSPage() {
   const total = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const count = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  async function handleConfirmPayment(payment: Payment) {
+  async function handleConfirmPayment(payment: Payment, orderType: OrderType, tableNumber?: string) {
     // A diferencia del resto de las acciones del store, addSale espera al servidor: el
     // número de ticket es correlativo y atómico entre dispositivos (ver salesStore).
     const sale = await addSale({
@@ -50,6 +50,8 @@ export default function POSPage() {
       subtotal: total,
       total,
       payment,
+      orderType,
+      tableNumber,
       cashierId: currentUser.id,
       cashierName: currentUser.name,
       registerSessionId: activeSession!.id,

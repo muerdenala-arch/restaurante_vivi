@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Banknote, Camera, ImageOff, Maximize2, QrCode, RefreshCcw, X, Zap } from 'lucide-react';
+import { Banknote, Camera, ImageOff, Maximize2, QrCode, RefreshCcw, ShoppingBag, UtensilsCrossed, X, Zap } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -10,19 +10,21 @@ import { useQrCodeStore } from '@/store/qrCodeStore';
 import { useAuthStore } from '@/store/authStore';
 import { APP_CONFIG } from '@/config/app';
 import { api } from '@/lib/api';
-import type { Payment, PaymentMethod } from '@/types';
+import type { OrderType, Payment, PaymentMethod } from '@/types';
 
 interface CheckoutModalProps {
   open: boolean;
   total: number;
   onClose: () => void;
-  onConfirm: (payment: Payment) => void;
+  onConfirm: (payment: Payment, orderType: OrderType, tableNumber?: string) => void;
 }
 
 export function CheckoutModal({ open, total, onClose, onConfirm }: CheckoutModalProps) {
   const currentBranchId = useAuthStore((s) => s.currentBranchId);
   const activeQr = useQrCodeStore((s) => (currentBranchId ? s.activeQrCodeForBranch(currentBranchId) : null));
   const [method, setMethod] = useState<PaymentMethod>('efectivo');
+  const [orderType, setOrderType] = useState<OrderType>('DINE_IN');
+  const [tableNumber, setTableNumber] = useState('');
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -32,6 +34,8 @@ export function CheckoutModal({ open, total, onClose, onConfirm }: CheckoutModal
   useEffect(() => {
     if (open) {
       setMethod('efectivo');
+      setOrderType('DINE_IN');
+      setTableNumber('');
       setReceiptImage(null);
       setUploadError(null);
       setConfirming(false);
@@ -54,7 +58,7 @@ export function CheckoutModal({ open, total, onClose, onConfirm }: CheckoutModal
 
   async function handleConfirm() {
     if (method === 'efectivo') {
-      onConfirm({ method: 'efectivo', amount: total });
+      onConfirm({ method: 'efectivo', amount: total }, orderType, tableNumber.trim() || undefined);
       return;
     }
     setConfirming(true);
@@ -66,7 +70,7 @@ export function CheckoutModal({ open, total, onClose, onConfirm }: CheckoutModal
         const { url } = await api.upload.image(receiptImage, 'receipts');
         uploadedUrl = url;
       }
-      onConfirm({ method: 'qr', amount: total, receiptImage: uploadedUrl });
+      onConfirm({ method: 'qr', amount: total, receiptImage: uploadedUrl }, orderType, tableNumber.trim() || undefined);
     } catch {
       setUploadError('No se pudo subir el comprobante. Intenta de nuevo.');
       setConfirming(false);
@@ -82,6 +86,53 @@ export function CheckoutModal({ open, total, onClose, onConfirm }: CheckoutModal
         <div className="mb-5 rounded-xl2 bg-gradient-to-br from-primary-500 to-accent-500 p-4 text-center text-white shadow-pop">
           <p className="text-sm opacity-90">Total a pagar</p>
           <p className="font-display text-4xl font-extrabold tabular-nums">{formatCurrency(total)}</p>
+        </div>
+
+        {/* ── Selector de tipo de consumo ─────────────────────────────────── */}
+        <div className="mb-4">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-soft">Tipo de consumo</p>
+          <div className="grid grid-cols-2 gap-2">
+            <OrderTypeTab
+              active={orderType === 'DINE_IN'}
+              icon={<UtensilsCrossed size={17} />}
+              label="En mesa"
+              onClick={() => setOrderType('DINE_IN')}
+            />
+            <OrderTypeTab
+              active={orderType === 'TAKE_AWAY'}
+              icon={<ShoppingBag size={17} />}
+              label="Para llevar"
+              onClick={() => setOrderType('TAKE_AWAY')}
+            />
+          </div>
+
+          {/* Input número de mesa — opcional y no bloqueante */}
+          <AnimatePresence>
+            {orderType === 'DINE_IN' && (
+              <motion.div
+                key="table-input"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.18 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-2.5 flex items-center gap-2 rounded-xl2 border border-border bg-field px-3 py-2">
+                  <UtensilsCrossed size={14} className="flex-shrink-0 text-ink-soft" />
+                  <input
+                    id="table-number-input"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Número de mesa (opcional)"
+                    value={tableNumber}
+                    onChange={(e) => setTableNumber(e.target.value)}
+                    className="w-full bg-transparent text-sm text-ink placeholder:text-ink-soft focus:outline-none"
+                    maxLength={10}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-2.5">
@@ -316,6 +367,34 @@ function MethodTab({
       className={cn(
         'flex min-h-touch items-center justify-center gap-2 rounded-xl2 border-2 text-sm font-bold transition-colors cursor-pointer',
         active ? 'border-primary-400 bg-primary-50 text-primary-800' : 'border-border bg-surface text-ink-muted hover:border-primary-200',
+      )}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function OrderTypeTab({
+  active,
+  icon,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex min-h-touch items-center justify-center gap-2 rounded-xl2 border-2 text-sm font-bold transition-all cursor-pointer',
+        active
+          ? 'border-secondary-400 bg-secondary-50 text-secondary-800 dark:bg-secondary-500/15 dark:text-secondary-300'
+          : 'border-border bg-surface text-ink-muted hover:border-secondary-200',
       )}
     >
       {icon}

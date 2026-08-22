@@ -188,7 +188,16 @@ export default function ReportsPage() {
             <div className="max-h-60 space-y-2 overflow-y-auto no-scrollbar">
               {filtered.slice(0, 8).map((sale) => (
                 <div key={sale.id} className="flex items-center justify-between gap-2 rounded-lg bg-cream-100 px-3 py-2 text-sm">
-                  <span className="truncate font-semibold text-ink">#{sale.ticketNumber} · {sale.cashierName}</span>
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate font-semibold text-ink">#{sale.ticketNumber} · {sale.cashierName}</span>
+                    <span className="text-[11px] text-ink-muted">
+                      {sale.orderType === 'TAKE_AWAY'
+                        ? '🥡 Para llevar'
+                        : sale.tableNumber
+                          ? `🍽 Mesa #${sale.tableNumber}`
+                          : '🍽 En mesa'}
+                    </span>
+                  </div>
                   <div className="flex flex-shrink-0 items-center gap-2">
                     {sale.payment.method === 'qr' && sale.payment.receiptImage && (
                       <button
